@@ -1,0 +1,35 @@
+# Docker Compose สำหรับ Development
+# ไฟล์นี้ใช้สำหรับรัน PostgreSQL บน Docker เท่านั้น
+# Backend และ Frontend จะรันแบบ native บน Windows เพื่อความเร็วในการพัฒนา
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ibit-repair-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"  # Expose port เพื่อให้ backend บน Windows เชื่อมต่อได้
+    environment:
+      POSTGRES_DB: ibit_repair          # ชื่อ database
+      POSTGRES_USER: ibit_user          # username
+      POSTGRES_PASSWORD: password123    # password (ควรเปลี่ยนในการใช้งานจริง)
+      POSTGRES_HOST_AUTH_METHOD: trust  # ไม่ต้องใช้ password (ชั่วคราวสำหรับ development)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # เก็บข้อมูลถาวร
+    networks:
+      - ibit-network
+
+# Named volumes สำหรับเก็บข้อมูล
+volumes:
+  postgres_data:
+    name: ibit-repair-postgres-data
+
+# Network
+networks:
+  ibit-network:
+    name: ibit-repair-network
+    driver: bridge
+

@@ -1,0 +1,72 @@
+# Docker Compose สำหรับ Production (NAS Synology)
+# ไฟล์นี้ใช้สำหรับ deploy ระบบทั้งหมดบน NAS
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ibit-repair-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ibit_repair
+      POSTGRES_USER: ibit_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}  # ดึงจาก .env file
+    volumes:
+      # Mount ไปที่ NAS volume เพื่อเก็บข้อมูลถาวร
+      - /volume1/ibit-repair/postgres-data:/var/lib/postgresql/data
+    networks:
+      - ibit-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ibit_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (Express + Prisma)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ibit-repair-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://ibit_user:${DB_PASSWORD}@postgres:5432/ibit_repair
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 86400  # 24 ชั่วโมง
+      NODE_ENV: production
+      PORT: 4000
+    volumes:
+      # Mount folder สำหรับเก็บไฟล์รูปภาพที่ upload
+      - /volume1/ibit-repair/uploads:/app/uploads
+      # Mount folder สำหรับเก็บ backup
+      - /volume1/ibit-repair/backups:/app/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ibit-network
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ibit-repair-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:4000  # URL ของ backend (internal network)
+      NODE_ENV: production
+    ports:
+      - "3000:3000"  # Expose port 3000 ให้เข้าถึงจากภายนอกได้
+    depends_on:
+      - backend
+    networks:
+      - ibit-network
+
+# Network สำหรับให้ containers สื่อสารกัน
+networks:
+  ibit-network:
+    driver: bridge
+
