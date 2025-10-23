@@ -75,26 +75,14 @@ try {
 
 # ตั้งค่า Environment Variables สำหรับ Backend
 Write-Step "ตั้งค่า Environment Variables สำหรับ Backend..."
-$backendEnvVars = @{
-    "NODE_ENV" = "production"
-    "DATABASE_URL" = "`${{Postgres.DATABASE_URL}}"
-    "JWT_SECRET" = "ibit_repair_jwt_secret_2025_secure_key_apicha_ton"
-    "JWT_REFRESH_SECRET" = "ibit_repair_refresh_secret_2025_secure_key_apicha_ton"
-    "JWT_EXPIRES_IN" = "86400"
-    "JWT_REFRESH_EXPIRES_IN" = "604800"
-    "SESSION_SECRET" = "ibit_repair_session_secret_2025_secure_key_apicha_ton"
-    "CORS_ORIGINS" = "https://ibit-repair-frontend.railway.app"
-    "PORT" = "4000"
-}
-
-foreach ($key in $backendEnvVars.Keys) {
-    try {
-        railway variables set "$key=$($backendEnvVars[$key])"
-        Write-Host "✅ Set $key" -ForegroundColor Green
-    } catch {
-        Write-Host "⚠️  Failed to set $key" -ForegroundColor Yellow
-    }
-}
+railway variables set NODE_ENV=production
+railway variables set JWT_SECRET=ibit_repair_jwt_secret_2025_secure_key_apicha_ton
+railway variables set JWT_REFRESH_SECRET=ibit_repair_refresh_secret_2025_secure_key_apicha_ton
+railway variables set JWT_EXPIRES_IN=86400
+railway variables set JWT_REFRESH_EXPIRES_IN=604800
+railway variables set SESSION_SECRET=ibit_repair_session_secret_2025_secure_key_apicha_ton
+railway variables set CORS_ORIGINS=https://ibit-repair-frontend.railway.app
+railway variables set PORT=4000
 
 # Deploy Backend
 Write-Step "Deploy Backend Service..."
