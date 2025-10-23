@@ -15,7 +15,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # ติดตั้ง dependencies
-RUN npm ci
+RUN npm install --no-audit --no-fund --prefer-offline
 
 # ========================================
 # Stage 2: Builder

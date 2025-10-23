@@ -202,7 +202,7 @@ export default function CustomersPage() {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-semibold text-gray-900">
-                      {customer.name}
+                      {customer.fullName}
                     </h3>
                     <span className="badge badge-received">
                       {customer._count.jobs} งาน

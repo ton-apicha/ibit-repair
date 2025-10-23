@@ -4,7 +4,7 @@
  */
 
 import type { Metadata, Viewport } from 'next';
-import './globals.css';
+// import './globals-basic.css';
 import I18nProvider from '@/components/I18nProvider';
 
 // Metadata สำหรับ SEO

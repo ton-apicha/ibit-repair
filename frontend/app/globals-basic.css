@@ -1,0 +1,175 @@
+/* Basic CSS for iBit Repair System */
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0 0 16px 0;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0 0 12px 0;
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #004499;
+}
+
+button {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  background-color: #f0f0f0;
+}
+
+.btn-primary {
+  background-color: #0066cc;
+  color: white;
+  border-color: #0066cc;
+}
+
+.btn-primary:hover {
+  background-color: #004499;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+.card {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-received {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+.badge-diagnosed {
+  background-color: #e6f3ff;
+  color: #0066cc;
+}
+
+.badge-in-repair {
+  background-color: #fff2e6;
+  color: #cc6600;
+}
+
+.badge-testing {
+  background-color: #f0e6ff;
+  color: #6600cc;
+}
+
+.badge-ready {
+  background-color: #e6ffe6;
+  color: #006600;
+}
+
+.badge-completed {
+  background-color: #ccffcc;
+  color: #004400;
+}
+
+.badge-cancelled {
+  background-color: #ffe6e6;
+  color: #cc0000;
+}
+
+.badge-on-hold {
+  background-color: #e6e6e6;
+  color: #666;
+}
+
+.badge-waiting {
+  background-color: #fffacd;
+  color: #cc9900;
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.p-4 {
+  padding: 16px;
+}
+
+.mb-4 {
+  margin-bottom: 16px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.rounded {
+  border-radius: 4px;
+}
+
+.shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}

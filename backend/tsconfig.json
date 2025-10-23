@@ -5,7 +5,7 @@
     "module": "commonjs",                        /* รูปแบบ module ที่ใช้ */
     "lib": ["ES2020"],                           /* Libraries ที่รวมไว้ */
     "outDir": "./dist",                          /* โฟลเดอร์สำหรับไฟล์ที่ compile แล้ว */
-    "rootDir": "./src",                          /* โฟลเดอร์ต้นทาง source code */
+    "rootDir": "./",                             /* โฟลเดอร์ต้นทาง source code */
     
     /* Strict Type-Checking Options */
     "strict": true,                              /* เปิดใช้งาน strict mode */
@@ -23,15 +23,15 @@
     "declarationMap": true,                      /* สร้าง sourcemap สำหรับ .d.ts */
     
     /* Path Mapping */
-    "baseUrl": "./src",
+    "baseUrl": "./",
     "paths": {
-      "@/*": ["./*"],
-      "@routes/*": ["./routes/*"],
-      "@controllers/*": ["./controllers/*"],
-      "@services/*": ["./services/*"],
-      "@middleware/*": ["./middleware/*"],
-      "@utils/*": ["./utils/*"],
-      "@types/*": ["./types/*"]
+      "@/*": ["./src/*"],
+      "@routes/*": ["./src/routes/*"],
+      "@controllers/*": ["./src/controllers/*"],
+      "@services/*": ["./src/services/*"],
+      "@middleware/*": ["./src/middleware/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@types/*": ["./src/types/*"]
     }
   },
   "include": [

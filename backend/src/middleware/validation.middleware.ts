@@ -57,10 +57,10 @@ export const validate = (schema: ZodSchema, source: 'body' | 'query' | 'params' 
         const details = error.errors.map(err => ({
           field: err.path.join('.'),
           message: err.message,
-          value: err.input,
+          value: (err as any).input,
         }));
 
-        validationError.details = details;
+        (validationError as any).details = details;
         
         next(validationError);
       } else {
@@ -123,10 +123,10 @@ export const validateMultiple = (schemas: {
         const details = error.errors.map(err => ({
           field: err.path.join('.'),
           message: err.message,
-          value: err.input,
+          value: (err as any).input,
         }));
 
-        validationError.details = details;
+        (validationError as any).details = details;
         
         next(validationError);
       } else {

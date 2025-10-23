@@ -51,7 +51,7 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   (config) => {
     const startTime = Date.now();
-    config.metadata = { startTime };
+    (config as any).metadata = { startTime };
 
     // ดึง token จาก localStorage (ถ้ามี)
     if (typeof window !== 'undefined') {
@@ -87,7 +87,7 @@ api.interceptors.request.use(
  */
 api.interceptors.response.use(
   (response) => {
-    const duration = Date.now() - (response.config.metadata?.startTime || 0);
+    const duration = Date.now() - ((response.config as any).metadata?.startTime || 0);
     
     // Log API response
     logger.apiResponse(
@@ -104,7 +104,7 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const duration = Date.now() - (error.config?.metadata?.startTime || 0);
+    const duration = Date.now() - ((error.config as any)?.metadata?.startTime || 0);
     
     // Log API error
     logger.error('API Error', {

@@ -328,4 +328,4 @@ if (typeof window !== 'undefined') {
 }
 
 export default logger;
-export { Logger, LogLevel, LogEntry };
+export type { Logger, LogLevel, LogEntry };

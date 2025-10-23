@@ -14,7 +14,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # ติดตั้ง dependencies
-RUN npm ci
+RUN npm install --no-audit --no-fund --prefer-offline
 
 # Copy source code
 COPY . .
@@ -45,7 +45,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # ติดตั้งเฉพาะ production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --omit=dev --no-audit --no-fund --prefer-offline && npm cache clean --force
 
 # Copy built files และ Prisma client จาก builder stage
 COPY --from=builder /app/dist ./dist

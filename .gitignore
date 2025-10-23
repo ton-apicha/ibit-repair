@@ -146,6 +146,10 @@ Dockerfile*
 docker-compose*
 .dockerignore
 
+# Railway specific
+railway.json
+env.railway.template
+
 # Development files
 README.md
 *.md

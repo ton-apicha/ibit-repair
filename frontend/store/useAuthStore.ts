@@ -96,8 +96,11 @@ export const useAuthStore = create<AuthState>()(
           // Initialize i18n with user's language preference
           if (user.language && typeof window !== 'undefined') {
             try {
-              const { i18n } = await import('react-i18next');
-              await i18n.changeLanguage(user.language);
+              const i18nModule = await import('react-i18next');
+              const i18n = (i18nModule as any).i18n;
+              if (i18n) {
+                await i18n.changeLanguage(user.language);
+              }
             } catch (i18nError) {
               console.warn('Failed to initialize i18n with user language:', i18nError);
             }

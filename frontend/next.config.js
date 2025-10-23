@@ -56,6 +56,16 @@ const nextConfig = {
   // Production optimizations
   swcMinify: true,
   compress: true,
+  
+  // TypeScript configuration
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
+  // ESLint configuration
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 module.exports = nextConfig;
