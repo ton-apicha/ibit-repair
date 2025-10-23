@@ -147,13 +147,13 @@ docker-compose*
 .dockerignore
 
 # Railway specific
-railway.json
-env.railway.template
+# railway.json
+# env.railway.template
 
 # Development files
-README.md
-*.md
-docs/
+# README.md
+# *.md
+# docs/
 
 # Uploads (will be mounted as volume)
 uploads/*
