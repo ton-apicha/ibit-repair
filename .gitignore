@@ -194,6 +194,13 @@ __tests__/
 *.spec.ts
 
 # Build artifacts
+backend/dist/
+backend/prisma/*.js
+backend/prisma/*.d.ts
+backend/prisma/*.js.map
+backend/prisma/*.d.ts.map
+frontend/.next/
+frontend/out/
 dist/
 build/
 *.tgz
