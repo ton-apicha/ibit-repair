@@ -5,7 +5,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-// Role types
+import { Role } from '@prisma/client';
 
 // ขยาย Request type เพื่อเพิ่ม property user
 declare global {

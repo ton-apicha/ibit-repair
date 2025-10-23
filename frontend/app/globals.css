@@ -78,6 +78,30 @@
            transition-all duration-200;
   }
 
+  /* Input และ Textarea ทุกตัว */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="url"],
+  textarea,
+  select {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg 
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           disabled:bg-gray-100 disabled:cursor-not-allowed
+           transition-all duration-200;
+  }
+
+  /* Input ที่ไม่มี type */
+  input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg 
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           disabled:bg-gray-100 disabled:cursor-not-allowed
+           transition-all duration-200;
+  }
+
   /* Card */
   .card {
     @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4;

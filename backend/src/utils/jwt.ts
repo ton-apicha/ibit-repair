@@ -4,7 +4,7 @@
  */
 
 import jwt from 'jsonwebtoken';
-// Role types: "ADMIN" | "MANAGER" | "TECHNICIAN" | "RECEPTIONIST"
+import { Role } from '@prisma/client';
 
 /**
  * Interface สำหรับ Token Payload
@@ -12,11 +12,11 @@ import jwt from 'jsonwebtoken';
 export interface TokenPayload {
   id: string;
   username: string;
-  role: string;
+  role: Role;
 }
 
 /**
- * สร้าง JWT Access Token
+ * สร้าง JWT Access Token (30 นาที)
  * @param payload - ข้อมูลที่ต้องการเก็บใน token (user id, username, role)
  * @returns JWT token string
  */
@@ -27,8 +27,8 @@ export const generateToken = (payload: TokenPayload): string => {
     throw new Error('JWT_SECRET is not defined in environment variables');
   }
 
-  // ดึงเวลา expiration (default 24 ชั่วโมง)
-  const expiresIn = process.env.JWT_EXPIRES_IN || '86400'; // 86400 วินาที = 24 ชั่วโมง
+  // ดึงเวลา expiration (default 30 นาที)
+  const expiresIn = process.env.JWT_EXPIRES_IN || '1800'; // 1800 วินาที = 30 นาที
 
   // สร้าง token
   const token = jwt.sign(payload, JWT_SECRET, {
@@ -36,6 +36,29 @@ export const generateToken = (payload: TokenPayload): string => {
   });
 
   return token;
+};
+
+/**
+ * สร้าง JWT Refresh Token (7 วัน)
+ * @param payload - ข้อมูลที่ต้องการเก็บใน token (user id, username, role)
+ * @returns JWT refresh token string
+ */
+export const generateRefreshToken = (payload: TokenPayload): string => {
+  // ดึง JWT_SECRET จาก environment variable
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+  }
+
+  // ดึงเวลา expiration (default 7 วัน)
+  const expiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '604800'; // 604800 วินาที = 7 วัน
+
+  // สร้าง refresh token
+  const refreshToken = jwt.sign(payload, JWT_SECRET, {
+    expiresIn: parseInt(expiresIn), // เวลาหมดอายุ (วินาที)
+  });
+
+  return refreshToken;
 };
 
 /**

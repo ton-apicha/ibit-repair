@@ -7,10 +7,13 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/useAuthStore';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useTranslation(['auth', 'common']);
   const login = useAuthStore((state) => state.login);
   const isLoading = useAuthStore((state) => state.isLoading);
 
@@ -18,6 +21,17 @@ export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showDebug, setShowDebug] = useState(false);
+
+  // Debug info
+  const debugInfo = typeof window !== 'undefined' ? {
+    hostname: window.location.hostname,
+    protocol: window.location.protocol,
+    port: window.location.port,
+    apiUrl: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:4000'
+      : `http://${window.location.hostname}:4000`,
+  } : null;
 
   /**
    * Handle Login Submit
@@ -26,9 +40,15 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
+    // 🐛 DEBUG: แสดงข้อมูลการ login
+    console.log('🔐 Login Attempt:');
+    console.log('  Username:', username);
+    console.log('  Hostname:', window.location.hostname);
+    console.log('  Timestamp:', new Date().toISOString());
+
     // ตรวจสอบว่ากรอกครบหรือไม่
     if (!username || !password) {
-      setError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+      setError(t('auth:invalid_credentials'));
       return;
     }
 
@@ -36,10 +56,30 @@ export default function LoginPage() {
       // เรียก login function จาก store
       await login(username, password);
 
+      console.log('✅ Login Success! Redirecting to dashboard...');
+      
       // ถ้า login สำเร็จ redirect ไป dashboard
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+      console.error('❌ Login Failed:');
+      console.error('  Error Object:', err);
+      console.error('  Error Type:', typeof err);
+      
+      // สร้าง error message ที่ละเอียด
+      let errorMessage = 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ';
+      
+      if (err.response) {
+        // มี response จาก server
+        errorMessage = err.response.data?.message || errorMessage;
+      } else if (err.request) {
+        // ไม่ได้รับ response (network error)
+        errorMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต';
+      } else {
+        // Error อื่นๆ
+        errorMessage = err.message || errorMessage;
+      }
+      
+      setError(errorMessage);
     }
   };
 
@@ -48,13 +88,18 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Card */}
         <div className="card p-8">
+          {/* Language Switcher */}
+          <div className="flex justify-end mb-4">
+            <LanguageSwitcher />
+          </div>
+
           {/* Logo/Icon */}
           <div className="text-center mb-8">
             <div className="text-5xl mb-4">⚙️</div>
             <h1 className="text-2xl font-bold text-gray-900">
-              ระบบซ่อมเครื่องขุด ASIC
+              {t('common:app_name')}
             </h1>
-            <p className="text-gray-600 mt-2">เข้าสู่ระบบเพื่อเริ่มใช้งาน</p>
+            <p className="text-gray-600 mt-2">{t('auth:login.please_login')}</p>
           </div>
 
           {/* Login Form */}
@@ -72,7 +117,7 @@ export default function LoginPage() {
                 htmlFor="username"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                ชื่อผู้ใช้
+                {t('auth:login.username')}
               </label>
               <input
                 id="username"
@@ -93,7 +138,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                รหัสผ่าน
+                {t('auth:login.password')}
               </label>
               <input
                 id="password"
@@ -113,7 +158,7 @@ export default function LoginPage() {
               className="btn-primary w-full"
               disabled={isLoading}
             >
-              {isLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+              {isLoading ? t('common:loading') : t('auth:login.login_button')}
             </button>
           </form>
 
@@ -132,6 +177,40 @@ export default function LoginPage() {
               </div>
             </div>
           </div>
+
+          {/* Debug Toggle */}
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => setShowDebug(!showDebug)}
+              className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              {showDebug ? '🔼 ซ่อน Debug' : '🐛 Debug Info'}
+            </button>
+          </div>
+
+          {/* Debug Info */}
+          {showDebug && debugInfo && (
+            <div className="mt-4 p-4 bg-gray-900 text-gray-100 rounded-lg">
+              <div className="font-bold text-yellow-400 mb-2 text-xs">
+                🐛 Debug Information
+              </div>
+              <div className="space-y-1 text-xs font-mono">
+                <div>
+                  <span className="text-gray-400">Frontend:</span>{' '}
+                  {debugInfo.protocol}//{debugInfo.hostname}:
+                  {debugInfo.port || '3000'}
+                </div>
+                <div>
+                  <span className="text-gray-400">API URL:</span>{' '}
+                  <span className="text-green-400">{debugInfo.apiUrl}</span>
+                </div>
+                <div className="text-yellow-400 mt-2 pt-2 border-t border-gray-700">
+                  💡 เปิด Console (F12) เพื่อดู logs ละเอียด
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

@@ -4,7 +4,7 @@
  */
 
 import { Router } from 'express';
-import { login, getCurrentUser, logout } from '../controllers/auth.controller';
+import { login, getCurrentUser, logout, refreshToken, updateLanguage } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -26,11 +26,27 @@ router.post('/login', login);
 router.get('/me', authenticate, getCurrentUser);
 
 /**
+ * POST /api/auth/refresh
+ * สร้าง access token ใหม่จาก refresh token
+ * Body: { refreshToken: string }
+ * Response: { token: string, user: object }
+ */
+router.post('/refresh', refreshToken);
+
+/**
  * POST /api/auth/logout
  * ออกจากระบบ
  * Response: { message: string }
  */
 router.post('/logout', logout);
+
+/**
+ * PUT /api/auth/language
+ * อัพเดทภาษาที่ต้องการ
+ * Body: { language: string }
+ * Response: { message: string, data: { language: string } }
+ */
+router.put('/language', authenticate, updateLanguage);
 
 export default router;
 

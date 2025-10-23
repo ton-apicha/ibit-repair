@@ -16,6 +16,7 @@ interface User {
   email: string;
   fullName: string;
   role: 'ADMIN' | 'MANAGER' | 'TECHNICIAN' | 'RECEPTIONIST';
+  language: string;
 }
 
 // Interface สำหรับ Auth Store State
@@ -23,12 +24,14 @@ interface AuthState {
   // State
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
   // Actions
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshAuth: () => Promise<void>;
   checkAuth: () => Promise<void>;
   setUser: (user: User) => void;
 }
@@ -45,6 +48,7 @@ export const useAuthStore = create<AuthState>()(
       // ==================
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
 
@@ -55,29 +59,62 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true });
 
+          console.log('🔑 useAuthStore.login: Starting login process...');
+
           // เรียก API login
           const response = await api.post('/api/auth/login', {
             username,
             password,
           });
 
-          const { token, user } = response.data;
+          console.log('📦 Login Response:');
+          console.log('  Status:', response.status);
+          console.log('  HasToken:', !!response.data.token);
+          console.log('  HasUser:', !!response.data.user);
+          console.log('  UserRole:', response.data.user?.role);
+          console.log('  Full Response:', response.data);
 
-          // เก็บ token ใน localStorage (ผ่าน api.ts interceptor)
+          const { token, refreshToken, user } = response.data;
+
+          // เก็บ tokens ใน localStorage
           if (typeof window !== 'undefined') {
             localStorage.setItem('token', token);
+            localStorage.setItem('refreshToken', refreshToken);
             localStorage.setItem('user', JSON.stringify(user));
+            console.log('💾 Tokens และ User ถูกเก็บใน localStorage แล้ว');
           }
 
           // อัพเดท state
           set({
             user,
             token,
+            refreshToken,
             isAuthenticated: true,
             isLoading: false,
           });
+
+          // Initialize i18n with user's language preference
+          if (user.language && typeof window !== 'undefined') {
+            try {
+              const { i18n } = await import('react-i18next');
+              await i18n.changeLanguage(user.language);
+            } catch (i18nError) {
+              console.warn('Failed to initialize i18n with user language:', i18nError);
+            }
+          }
+
+          console.log('✅ Login Success! State updated.');
         } catch (error: any) {
           set({ isLoading: false });
+          
+          console.error('❌ Login Error in Store:');
+          console.error('  HasResponse:', !!error.response);
+          console.error('  HasRequest:', !!error.request);
+          console.error('  Status:', error.response?.status);
+          console.error('  ResponseData:', error.response?.data);
+          console.error('  Message:', error.message);
+          console.error('  Code:', error.code);
+          console.error('  Full Error:', error);
           
           // แสดง error message
           const message =
@@ -93,6 +130,7 @@ export const useAuthStore = create<AuthState>()(
         // ลบข้อมูลจาก localStorage
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
         }
 
@@ -100,8 +138,52 @@ export const useAuthStore = create<AuthState>()(
         set({
           user: null,
           token: null,
+          refreshToken: null,
           isAuthenticated: false,
         });
+      },
+
+      // ==================
+      // Refresh Authentication
+      // ใช้ refresh token เพื่อสร้าง access token ใหม่
+      // ==================
+      refreshAuth: async () => {
+        try {
+          const { refreshToken } = get();
+          
+          if (!refreshToken) {
+            throw new Error('No refresh token available');
+          }
+
+          console.log('🔄 Refreshing token...');
+
+          const response = await api.post('/api/auth/refresh', {
+            refreshToken,
+          });
+
+          const { token, user } = response.data;
+
+          // เก็บ token ใหม่ใน localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+          }
+
+          // อัพเดท state
+          set({
+            user,
+            token,
+            isAuthenticated: true,
+          });
+
+          console.log('✅ Token refreshed successfully');
+        } catch (error) {
+          console.error('❌ Token refresh failed:', error);
+          
+          // ถ้า refresh ล้มเหลว ให้ logout
+          get().logout();
+          throw error;
+        }
       },
 
       // ==================

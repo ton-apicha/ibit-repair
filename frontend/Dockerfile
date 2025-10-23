@@ -44,6 +44,9 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
+# ติดตั้ง dumb-init สำหรับ signal handling
+RUN apk add --no-cache dumb-init
+
 # Set environment
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
@@ -69,6 +72,7 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-# Start server
+# Start server with dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "server.js"]
 

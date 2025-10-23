@@ -26,7 +26,7 @@ export default function EditCustomerPage() {
 
   // State
   const [customer, setCustomer] = useState<Customer | null>(null);
-  const [name, setName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
@@ -45,7 +45,7 @@ export default function EditCustomerPage() {
       const data = response.data;
 
       setCustomer(data);
-      setName(data.name);
+      setFullName(data.fullName || data.name);
       setPhone(data.phone);
       setEmail(data.email || '');
       setAddress(data.address || '');
@@ -72,8 +72,15 @@ export default function EditCustomerPage() {
     setError('');
 
     // ตรวจสอบข้อมูล
-    if (!name.trim() || !phone.trim()) {
+    if (!fullName.trim() || !phone.trim()) {
       setError('กรุณากรอกชื่อและเบอร์โทรศัพท์');
+      return;
+    }
+
+    // ตรวจสอบเบอร์โทร (10 หลัก เริ่มต้นด้วย 0)
+    const phonePattern = /^0[0-9]{9}$/;
+    if (!phonePattern.test(phone.trim())) {
+      setError('เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก เริ่มต้นด้วย 0');
       return;
     }
 
@@ -82,7 +89,7 @@ export default function EditCustomerPage() {
 
       // เรียก API อัพเดท
       await api.put(`/api/customers/${params.id}`, {
-        name: name.trim(),
+        fullName: fullName.trim(),
         phone: phone.trim(),
         email: email.trim() || null,
         address: address.trim() || null,
@@ -158,8 +165,8 @@ export default function EditCustomerPage() {
             </label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               className="input-field"
               placeholder="นาย สมชาย ใจดี"
               required
@@ -177,10 +184,15 @@ export default function EditCustomerPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="input-field"
-              placeholder="08x-xxx-xxxx"
+              placeholder="0812345678"
+              pattern="[0-9]{10}"
+              title="ตัวเลข 10 หลัก เริ่มต้นด้วย 0"
               required
               disabled={saving}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              ตัวเลข 10 หลัก เช่น 0812345678
+            </p>
           </div>
 
           {/* อีเมล */}

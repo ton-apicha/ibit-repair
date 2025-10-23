@@ -16,7 +16,6 @@ services:
       POSTGRES_DB: ibit_repair          # ชื่อ database
       POSTGRES_USER: ibit_user          # username
       POSTGRES_PASSWORD: password123    # password (ควรเปลี่ยนในการใช้งานจริง)
-      POSTGRES_HOST_AUTH_METHOD: trust  # ไม่ต้องใช้ password (ชั่วคราวสำหรับ development)
     volumes:
       - postgres_data:/var/lib/postgresql/data  # เก็บข้อมูลถาวร
     networks:

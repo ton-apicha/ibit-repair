@@ -7,13 +7,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 
 // Interface สำหรับข้อมูลลูกค้า
 interface Customer {
   id: string;
-  name: string;
+  fullName: string;
   phone: string;
   email: string | null;
   address: string | null;
@@ -25,6 +26,8 @@ interface Customer {
 }
 
 export default function CustomersPage() {
+  const { t } = useTranslation(['customers', 'common']);
+  
   // State
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,10 +74,10 @@ export default function CustomersPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              ลูกค้า
+              {t('customers:title')}
             </h1>
             <p className="text-gray-600 mt-1">
-              จัดการข้อมูลลูกค้าทั้งหมด
+              {t('customers:customer_list')}
             </p>
           </div>
 
@@ -82,7 +85,7 @@ export default function CustomersPage() {
             href="/customers/new"
             className="btn-primary mt-4 md:mt-0 text-center"
           >
-            + เพิ่มลูกค้าใหม่
+            + {t('customers:new_customer')}
           </Link>
         </div>
 
@@ -90,7 +93,7 @@ export default function CustomersPage() {
         <div className="card mb-6">
           <input
             type="text"
-            placeholder="ค้นหา ชื่อ, เบอร์โทร, อีเมล..."
+            placeholder={`${t('common:search')}...`}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -110,7 +113,7 @@ export default function CustomersPage() {
           <div className="card text-center py-12">
             <div className="text-6xl mb-4">👥</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {search ? 'ไม่พบลูกค้า' : 'ยังไม่มีลูกค้า'}
+              {search ? t('common:table.no_data') : t('customers:title')}
             </h3>
             <p className="text-gray-600 mb-6">
               {search
@@ -119,7 +122,7 @@ export default function CustomersPage() {
             </p>
             {!search && (
               <Link href="/customers/new" className="btn-primary inline-block">
-                + เพิ่มลูกค้าใหม่
+                + {t('customers:new_customer')}
               </Link>
             )}
           </div>
@@ -131,22 +134,22 @@ export default function CustomersPage() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      ชื่อ-นามสกุล
+                      {t('customers:full_name')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      เบอร์โทร
+                      {t('customers:phone_number')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      อีเมล
+                      {t('customers:email_address')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      งานซ่อม
+                      {t('common:nav.jobs')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      วันที่สร้าง
+                      {t('common:date')}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      จัดการ
+                      {t('common:actions')}
                     </th>
                   </tr>
                 </thead>
@@ -158,7 +161,7 @@ export default function CustomersPage() {
                           href={`/customers/${customer.id}`}
                           className="font-medium text-primary-600 hover:text-primary-700"
                         >
-                          {customer.name}
+                          {customer.fullName}
                         </Link>
                       </td>
                       <td className="px-6 py-4 text-gray-600">

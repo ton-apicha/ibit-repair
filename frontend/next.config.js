@@ -12,15 +12,11 @@ const nextConfig = {
   // การตั้งค่ารูปภาพ
   images: {
     // อนุญาตให้โหลดรูปจาก domains เหล่านี้
-    domains: ['localhost'],
+    domains: ['localhost', '127.0.0.1'],
     // รูปแบบรูปภาพที่รองรับ
     formats: ['image/webp', 'image/avif'],
-  },
-
-  // Experimental features
-  experimental: {
-    // เปิดใช้งาน Server Actions (ถ้าต้องการใช้)
-    serverActions: true,
+    // เปิดใช้งาน image optimization
+    unoptimized: false,
   },
 
   // Environment variables ที่จะส่งไปให้ client-side
@@ -28,11 +24,38 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
   },
 
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+        ],
+      },
+    ];
+  },
+
   // Webpack configuration (ถ้าต้องการปรับแต่ง)
   webpack: (config, { isServer }) => {
     // ปรับแต่ง webpack config ได้ที่นี่
     return config;
   },
+
+  // Production optimizations
+  swcMinify: true,
+  compress: true,
 };
 
 module.exports = nextConfig;

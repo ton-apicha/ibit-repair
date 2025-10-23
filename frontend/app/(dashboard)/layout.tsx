@@ -7,8 +7,10 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/useAuthStore';
 import Link from 'next/link';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function DashboardLayout({
   children,
@@ -16,6 +18,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const { t } = useTranslation(['common']);
   const { isAuthenticated, user, logout, checkAuth } = useAuthStore();
 
   // ตรวจสอบ authentication เมื่อ component mount
@@ -34,7 +37,7 @@ export default function DashboardLayout({
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4">⚙️</div>
-          <p className="text-gray-600">กำลังโหลด...</p>
+          <p className="text-gray-600">{t('common:loading')}</p>
         </div>
       </div>
     );
@@ -71,12 +74,15 @@ export default function DashboardLayout({
                 <p className="text-xs text-gray-500">{user.role}</p>
               </div>
 
-              <button
-                onClick={handleLogout}
-                className="btn-secondary text-sm"
-              >
-                ออกจากระบบ
-              </button>
+              <div className="flex items-center space-x-2">
+                <LanguageSwitcher />
+                <button
+                  onClick={handleLogout}
+                  className="btn-secondary text-sm"
+                >
+                  {t('common:logout')}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -90,7 +96,7 @@ export default function DashboardLayout({
             className="flex flex-col items-center py-2 text-primary-600"
           >
             <span className="text-xl mb-1">🏠</span>
-            <span className="text-xs">หน้าแรก</span>
+            <span className="text-xs">{t('common:nav.home')}</span>
           </Link>
 
           <Link
@@ -98,7 +104,7 @@ export default function DashboardLayout({
             className="flex flex-col items-center py-2 text-gray-600"
           >
             <span className="text-xl mb-1">📋</span>
-            <span className="text-xs">งานซ่อม</span>
+            <span className="text-xs">{t('common:nav.jobs')}</span>
           </Link>
 
           <Link
@@ -106,7 +112,7 @@ export default function DashboardLayout({
             className="flex flex-col items-center py-2 text-gray-600"
           >
             <span className="text-xl mb-1">👥</span>
-            <span className="text-xs">ลูกค้า</span>
+            <span className="text-xs">{t('common:nav.customers')}</span>
           </Link>
 
           <Link
@@ -114,15 +120,15 @@ export default function DashboardLayout({
             className="flex flex-col items-center py-2 text-gray-600"
           >
             <span className="text-xl mb-1">📦</span>
-            <span className="text-xs">อะไหล่</span>
+            <span className="text-xs">{t('common:nav.parts')}</span>
           </Link>
 
           <Link
-            href="/reports"
+            href="/models"
             className="flex flex-col items-center py-2 text-gray-600"
           >
-            <span className="text-xl mb-1">📊</span>
-            <span className="text-xs">รายงาน</span>
+            <span className="text-xl mb-1">⚙️</span>
+            <span className="text-xs">{t('common:nav.models')}</span>
           </Link>
         </div>
       </nav>
@@ -136,7 +142,7 @@ export default function DashboardLayout({
               className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary-50 text-primary-700 font-medium"
             >
               <span className="text-xl">🏠</span>
-              <span>หน้าแรก</span>
+              <span>{t('common:nav.home')}</span>
             </Link>
 
             <Link
@@ -144,7 +150,7 @@ export default function DashboardLayout({
               className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100"
             >
               <span className="text-xl">📋</span>
-              <span>งานซ่อม</span>
+              <span>{t('common:nav.jobs')}</span>
             </Link>
 
             <Link
@@ -152,7 +158,7 @@ export default function DashboardLayout({
               className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100"
             >
               <span className="text-xl">👥</span>
-              <span>ลูกค้า</span>
+              <span>{t('common:nav.customers')}</span>
             </Link>
 
             <Link
@@ -160,7 +166,23 @@ export default function DashboardLayout({
               className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100"
             >
               <span className="text-xl">📦</span>
-              <span>อะไหล่</span>
+              <span>{t('common:nav.parts')}</span>
+            </Link>
+
+            <Link
+              href="/models"
+              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100"
+            >
+              <span className="text-xl">⚙️</span>
+              <span>{t('common:nav.models')}</span>
+            </Link>
+
+            <Link
+              href="/warranties"
+              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100"
+            >
+              <span className="text-xl">🛡️</span>
+              <span>{t('common:nav.warranties')}</span>
             </Link>
 
             <Link
@@ -168,7 +190,7 @@ export default function DashboardLayout({
               className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100"
             >
               <span className="text-xl">📊</span>
-              <span>รายงาน</span>
+              <span>{t('common:nav.reports')}</span>
             </Link>
 
             {/* Admin Only */}
@@ -177,8 +199,8 @@ export default function DashboardLayout({
                 href="/settings"
                 className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100"
               >
-                <span className="text-xl">⚙️</span>
-                <span>ตั้งค่า</span>
+                <span className="text-xl">🔧</span>
+                <span>{t('common:nav.settings')}</span>
               </Link>
             )}
           </nav>

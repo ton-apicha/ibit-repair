@@ -1,0 +1,385 @@
+// Prisma Schema สำหรับระบบซ่อมเครื่องขุดบิทคอยน์ ASIC
+// ไฟล์นี้กำหนดโครงสร้างของฐานข้อมูลทั้งหมด
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ========================
+// ระบบผู้ใช้และสิทธิ์
+// ========================
+
+// ตารางผู้ใช้งานระบบ (ช่าง, ผู้จัดการ, ผู้ดูแลระบบ, พนักงานต้อนรับ)
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique  // ชื่อผู้ใช้สำหรับ login
+  email        String   @unique  // อีเมล
+  passwordHash String             // รหัสผ่านที่เข้ารหัสแล้ว (bcrypt)
+  fullName     String             // ชื่อ-นามสกุล
+  role         String   @default("TECHNICIAN")  // บทบาทในระบบ: ADMIN, MANAGER, TECHNICIAN, RECEPTIONIST
+  isActive     Boolean  @default(true)        // สถานะการใช้งาน (เปิด/ปิด)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  assignedJobs     Job[]              @relation("AssignedTechnician")  // งานที่ได้รับมอบหมาย
+  createdJobs      Job[]              @relation("CreatedBy")           // งานที่สร้าง
+  partTransactions PartTransaction[]  @relation("TransactionCreatedBy") // รายการเบิกอะไหล่
+
+  @@map("users")  // ชื่อตารางในฐานข้อมูล
+}
+
+// หมายเหตุ: Role values ที่รองรับ: "ADMIN", "MANAGER", "TECHNICIAN", "RECEPTIONIST"
+
+// ========================
+// ระบบลูกค้า
+// ========================
+
+// ตารางข้อมูลลูกค้า
+model Customer {
+  id        String   @id @default(uuid())
+  name      String                          // ชื่อลูกค้า
+  phone     String                          // เบอร์โทรศัพท์
+  email     String?                         // อีเมล (optional)
+  address   String?                         // ที่อยู่
+  notes     String?                         // หมายเหตุเพิ่มเติม
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  jobs Job[]  // รายการงานซ่อมของลูกค้านี้
+
+  @@map("customers")
+}
+
+// ========================
+// ระบบรุ่นเครื่องขุด
+// ========================
+
+// ตารางยี่ห้อเครื่องขุด (Bitmain, MicroBT, Canaan, etc.)
+model Brand {
+  id        String   @id @default(uuid())
+  name      String   @unique  // ชื่อยี่ห้อ เช่น Bitmain, MicroBT
+  logoUrl   String?            // URL รูปโลโก้
+  createdAt DateTime @default(now())
+
+  // Relations
+  models Model[]  // รุ่นเครื่องของยี่ห้อนี้
+
+  @@map("brands")
+}
+
+// ตารางรุ่นเครื่องขุด (S19, M30S++, etc.)
+model Model {
+  id          String   @id @default(uuid())
+  brandId     String                    // FK ไปยัง Brand
+  modelName   String                    // ชื่อรุ่น เช่น Antminer S19 Pro
+  hashRate    Float?                    // อัตราการขุด (TH/s)
+  powerWatt   Int?                      // กำลังไฟ (Watts)
+  algorithm   String?                   // อัลกอริทึม เช่น SHA-256, Scrypt
+  releaseYear Int?                      // ปีที่วางจำหน่าย
+  imageUrl    String?                   // URL รูปเครื่อง
+  createdAt   DateTime @default(now())
+
+  // Relations
+  brand Brand @relation(fields: [brandId], references: [id])
+  jobs  Job[]  // งานซ่อมของรุ่นนี้
+
+  @@map("models")
+}
+
+// ========================
+// ระบบอะไหล่
+// ========================
+
+// ตารางหมวดหมู่อะไหล่ (Hash Board, PSU, Fan, etc.)
+model PartCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique  // ชื่อหมวดหมู่ เช่น Hash Board, Control Board
+  description String?            // คำอธิบาย
+  createdAt   DateTime @default(now())
+
+  // Relations
+  parts Part[]  // อะไหล่ในหมวดหมู่นี้
+
+  @@map("part_categories")
+}
+
+// ตารางอะไหล่
+model Part {
+  id            String   @id @default(uuid())
+  categoryId    String                      // FK ไปยัง PartCategory
+  partName      String                      // ชื่ออะไหล่
+  partCode      String   @unique            // รหัสอะไหล่ (ไม่ซ้ำ)
+  price         Float                       // ราคาต่อชิ้น
+  stockQty      Int      @default(0)        // จำนวนคงเหลือในสต็อก
+  minStockLevel Int      @default(5)        // ระดับขั้นต่ำ (แจ้งเตือนเมื่อต่ำกว่า)
+  supplier      String?                     // ชื่อผู้จัดจำหน่าย
+  imageUrl      String?                     // URL รูปอะไหล่
+  description   String?                     // คำอธิบายเพิ่มเติม
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  category     PartCategory      @relation(fields: [categoryId], references: [id])
+  transactions PartTransaction[]  // ประวัติการเบิก-จ่าย
+  jobParts     JobPart[]          // อะไหล่ที่ใช้ในงานซ่อม
+
+  @@map("parts")
+}
+
+// ตารางบันทึกการเบิก-จ่ายอะไหล่
+model PartTransaction {
+  id        String          @id @default(uuid())
+  partId    String                       // FK ไปยัง Part
+  jobId     String?                      // FK ไปยัง Job (ถ้าเบิกใช้ในงาน)
+  qty       Int                          // จำนวน (+ คือเพิ่ม, - คือลด)
+  type      TransactionType              // ประเภท IN (นำเข้า) หรือ OUT (เบิกใช้)
+  notes     String?                      // หมายเหตุ
+  createdBy String                       // FK ไปยัง User ที่ทำรายการ
+  createdAt DateTime        @default(now())
+
+  // Relations
+  part Part @relation(fields: [partId], references: [id])
+  user User @relation("TransactionCreatedBy", fields: [createdBy], references: [id])
+
+  @@map("part_transactions")
+}
+
+// Enum ประเภทการทำรายการอะไหล่
+enum TransactionType {
+  IN  // นำเข้าสต็อก
+  OUT // เบิกออกจากสต็อก
+}
+
+// ========================
+// ระบบโปรไฟล์การรับประกัน
+// ========================
+
+// ตารางโปรไฟล์การรับประกัน
+model WarrantyProfile {
+  id           String   @id @default(uuid())
+  name         String   @unique  // ชื่อโปรไฟล์ เช่น "รับประกัน 30 วัน"
+  durationDays Int                // จำนวนวัน (0 = ไม่รับประกัน)
+  coversParts  Boolean  @default(true)   // รับประกันชิ้นส่วนหรือไม่
+  coversLabor  Boolean  @default(true)   // รับประกันค่าแรงหรือไม่
+  terms        String?                   // เงื่อนไขเพิ่มเติม
+  isActive     Boolean  @default(true)   // สถานะ (เปิด/ปิด)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  jobs Job[]  // งานที่ใช้โปรไฟล์นี้
+
+  @@map("warranty_profiles")
+}
+
+// ========================
+// ระบบงานซ่อม (Job/Ticket)
+// ========================
+
+// ตารางงานซ่อมหลัก
+model Job {
+  id                String    @id @default(uuid())
+  jobNumber         String    @unique           // รหัสงาน เช่น R2025-0001
+  customerId        String                      // FK ไปยัง Customer
+  modelId           String                      // FK ไปยัง Model (รุ่นเครื่อง)
+  serialNumber      String?                     // Serial Number ของเครื่อง
+  status            JobStatus @default(RECEIVED) // สถานะปัจจุบัน
+  assignedTo        String?                     // FK ไปยัง User (ช่างที่รับผิดชอบ)
+  warrantyProfileId String?                     // FK ไปยัง WarrantyProfile
+  
+  // ข้อมูลการซ่อม
+  symptoms      String                   // อาการเสียที่ลูกค้าแจ้ง
+  diagnosis     String?                  // ผลการตรวจสอบของช่าง
+  repairNotes   String?                  // บันทึกการซ่อม
+  testResults   String?                  // ผลการทดสอบหลังซ่อม
+  
+  // วันที่สำคัญ
+  receivedAt  DateTime  @default(now()) // วันที่รับเครื่อง
+  startedAt   DateTime?                 // วันที่เริ่มซ่อม
+  completedAt DateTime?                 // วันที่ซ่อมเสร็จ
+  deliveredAt DateTime?                 // วันที่ส่งคืนลูกค้า
+  
+  createdAt DateTime @default(now())
+  createdBy String                      // FK ไปยัง User ที่สร้างงาน
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  customer          Customer           @relation(fields: [customerId], references: [id])
+  model             Model              @relation(fields: [modelId], references: [id])
+  assignedTechnician User?            @relation("AssignedTechnician", fields: [assignedTo], references: [id])
+  warrantyProfile   WarrantyProfile?   @relation(fields: [warrantyProfileId], references: [id])
+  creator           User               @relation("CreatedBy", fields: [createdBy], references: [id])
+  
+  statusHistory JobStatusHistory[]  // ประวัติการเปลี่ยนสถานะ
+  images        JobImage[]          // รูปภาพ (ก่อนซ่อม/หลังซ่อม)
+  timeline      JobTimeline[]       // Timeline การทำงาน
+  parts         JobPart[]           // อะไหล่ที่ใช้
+  quotations    Quotation[]         // ใบเสนอราคา
+  invoices      Invoice[]           // ใบแจ้งหนี้
+
+  @@map("jobs")
+}
+
+// Enum สถานะงานซ่อม
+enum JobStatus {
+  RECEIVED        // รับเครื่องแล้ว รอตรวจสอบ
+  DIAGNOSED       // ตรวจสอบแล้ว รอลูกค้าอนุมัติ
+  IN_REPAIR       // กำลังซ่อม
+  TESTING         // ทดสอบหลังซ่อม
+  READY_FOR_PICKUP // พร้อมให้ลูกค้ามารับ
+  COMPLETED       // เสร็จสิ้น (ส่งคืนลูกค้าแล้ว)
+  CANCELLED       // ยกเลิก
+  ON_HOLD         // พักไว้ก่อน
+  WAITING_PARTS   // รออะไหล่
+}
+
+// ตารางประวัติการเปลี่ยนสถานะงาน
+model JobStatusHistory {
+  id        String    @id @default(uuid())
+  jobId     String                    // FK ไปยัง Job
+  status    JobStatus                 // สถานะที่เปลี่ยนไป
+  notes     String?                   // หมายเหตุ
+  changedBy String                    // ใครเปลี่ยน
+  changedAt DateTime  @default(now())
+
+  // Relations
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("job_status_history")
+}
+
+// ตารางรูปภาพงานซ่อม
+model JobImage {
+  id         String    @id @default(uuid())
+  jobId      String                   // FK ไปยัง Job
+  imageUrl   String                   // URL ของรูปภาพ
+  type       ImageType @default(BEFORE) // ประเภท (ก่อน/ระหว่าง/หลัง)
+  notes      String?                  // หมายเหตุ
+  uploadedAt DateTime  @default(now())
+
+  // Relations
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("job_images")
+}
+
+// Enum ประเภทรูปภาพ
+enum ImageType {
+  BEFORE  // ก่อนซ่อม
+  DURING  // ระหว่างซ่อม
+  AFTER   // หลังซ่อม
+}
+
+// ตารางบันทึก Timeline การทำงาน
+model JobTimeline {
+  id          String   @id @default(uuid())
+  jobId       String                 // FK ไปยัง Job
+  action      String                 // การกระทำ เช่น "เริ่มตรวจสอบ", "เปลี่ยน Hash Board"
+  description String?                // รายละเอียดเพิ่มเติม
+  createdBy   String                 // ใครทำ
+  createdAt   DateTime @default(now())
+
+  // Relations
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("job_timeline")
+}
+
+// ตารางอะไหล่ที่ใช้ในงานซ่อม
+model JobPart {
+  id          String @id @default(uuid())
+  jobId       String               // FK ไปยัง Job
+  partId      String               // FK ไปยัง Part
+  qty         Int                  // จำนวนที่ใช้
+  priceAtTime Float                // ราคา ณ เวลาที่ใช้ (เก็บไว้เพื่อไม่ให้เปลี่ยนตามราคาปัจจุบัน)
+
+  // Relations
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  part Part @relation(fields: [partId], references: [id])
+
+  @@map("job_parts")
+}
+
+// ========================
+// ระบบการเงิน
+// ========================
+
+// ตารางใบเสนอราคา
+model Quotation {
+  id          String          @id @default(uuid())
+  quotationNumber String      @unique  // เลขที่ใบเสนอราคา
+  jobId       String                   // FK ไปยัง Job
+  totalLabor  Float                    // ค่าแรงรวม
+  totalParts  Float                    // ค่าอะไหล่รวม
+  tax         Float           @default(0) // ภาษี (VAT)
+  grandTotal  Float                    // ยอดรวมทั้งสิ้น
+  validUntil  DateTime?                // ใบเสนอราคามีผลถึงวันที่
+  status      QuotationStatus @default(PENDING) // สถานะ
+  notes       String?                  // หมายเหตุ
+  createdAt   DateTime        @default(now())
+
+  // Relations
+  job      Job       @relation(fields: [jobId], references: [id])
+  invoices Invoice[] // Invoice ที่สร้างจากใบเสนอราคานี้
+
+  @@map("quotations")
+}
+
+// Enum สถานะใบเสนอราคา
+enum QuotationStatus {
+  PENDING  // รอลูกค้าอนุมัติ
+  APPROVED // ลูกค้าอนุมัติแล้ว
+  REJECTED // ลูกค้าปฏิเสธ
+}
+
+// ตารางใบแจ้งหนี้/ใบกำกับภาษี
+model Invoice {
+  id            String        @id @default(uuid())
+  invoiceNumber String        @unique  // เลขที่ใบแจ้งหนี้
+  jobId         String                 // FK ไปยัง Job
+  quotationId   String?                // FK ไปยัง Quotation (ถ้ามี)
+  totalAmount   Float                  // ยอดรวมทั้งสิ้น
+  paidAmount    Float         @default(0) // ยอดที่ชำระแล้ว
+  paymentStatus PaymentStatus @default(UNPAID) // สถานะการชำระเงิน
+  notes         String?                // หมายเหตุ
+  issuedAt      DateTime      @default(now()) // วันที่ออกใบแจ้งหนี้
+
+  // Relations
+  job       Job        @relation(fields: [jobId], references: [id])
+  quotation Quotation? @relation(fields: [quotationId], references: [id])
+  payments  Payment[]  // รายการชำระเงิน
+
+  @@map("invoices")
+}
+
+// Enum สถานะการชำระเงิน
+enum PaymentStatus {
+  UNPAID  // ยังไม่ชำระ
+  PARTIAL // ชำระบางส่วน
+  PAID    // ชำระครบแล้ว
+}
+
+// ตารางบันทึกการชำระเงิน
+model Payment {
+  id            String   @id @default(uuid())
+  invoiceId     String                // FK ไปยัง Invoice
+  amount        Float                 // จำนวนเงินที่ชำระ
+  paymentMethod String                // วิธีการชำระ เช่น เงินสด, โอน, บัตรเครดิต
+  receiptNumber String?               // เลขที่ใบเสร็จ
+  receivedBy    String                // ผู้รับเงิน
+  notes         String?               // หมายเหตุ
+  paidAt        DateTime @default(now()) // วันที่ชำระเงิน
+
+  // Relations
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@map("payments")
+}
+

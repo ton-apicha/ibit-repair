@@ -27,7 +27,7 @@ export const getAllCustomers = async (
     const where = search
       ? {
           OR: [
-            { name: { contains: search as string, mode: 'insensitive' as const } },
+            { fullName: { contains: search as string, mode: 'insensitive' as const } },
             { phone: { contains: search as string } },
             { email: { contains: search as string, mode: 'insensitive' as const } },
           ],
@@ -64,7 +64,7 @@ export const getAllCustomers = async (
     console.error('❌ Get all customers error:', error);
     res.status(500).json({
       error: 'Internal Server Error',
-      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลลูกค้า',
+      message: 'Failed to retrieve customers',
     });
   }
 };
@@ -86,7 +86,7 @@ export const getCustomerById = async (
       include: {
         jobs: {
           include: {
-            model: {
+            minerModel: {
               include: {
                 brand: true,
               },
@@ -112,7 +112,7 @@ export const getCustomerById = async (
     console.error('❌ Get customer by ID error:', error);
     res.status(500).json({
       error: 'Internal Server Error',
-      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลลูกค้า',
+      message: 'Failed to retrieve customers',
     });
   }
 };
@@ -127,10 +127,10 @@ export const createCustomer = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { name, phone, email, address, notes } = req.body;
+    const { fullName, phone, email, address, notes } = req.body;
 
     // ตรวจสอบข้อมูลที่จำเป็น
-    if (!name || !phone) {
+    if (!fullName || !phone) {
       res.status(400).json({
         error: 'Bad Request',
         message: 'กรุณากรอกชื่อและเบอร์โทรศัพท์',
@@ -138,9 +138,19 @@ export const createCustomer = async (
       return;
     }
 
+    // ตรวจสอบเบอร์โทร (10 หลัก เริ่มต้นด้วย 0)
+    const phonePattern = /^0[0-9]{9}$/;
+    if (!phonePattern.test(phone.trim())) {
+      res.status(400).json({
+        error: 'Bad Request',
+        message: 'เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก เริ่มต้นด้วย 0',
+      });
+      return;
+    }
+
     // ตรวจสอบว่าเบอร์โทรซ้ำหรือไม่
     const existingCustomer = await prisma.customer.findFirst({
-      where: { phone },
+      where: { phone: phone.trim() },
     });
 
     if (existingCustomer) {
@@ -154,11 +164,11 @@ export const createCustomer = async (
     // สร้างลูกค้าใหม่
     const customer = await prisma.customer.create({
       data: {
-        name,
-        phone,
-        email: email || null,
-        address: address || null,
-        notes: notes || null,
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+        email: email?.trim() || null,
+        address: address?.trim() || null,
+        notes: notes?.trim() || null,
       },
     });
 
@@ -186,7 +196,7 @@ export const updateCustomer = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, phone, email, address, notes } = req.body;
+    const { fullName, phone, email, address, notes } = req.body;
 
     // ตรวจสอบว่ามีลูกค้าอยู่จริงหรือไม่
     const existingCustomer = await prisma.customer.findUnique({
@@ -201,21 +211,33 @@ export const updateCustomer = async (
       return;
     }
 
-    // ถ้ามีการเปลี่ยนเบอร์โทร ต้องตรวจสอบว่าซ้ำกับคนอื่นหรือไม่
-    if (phone && phone !== existingCustomer.phone) {
-      const duplicatePhone = await prisma.customer.findFirst({
-        where: {
-          phone,
-          id: { not: id }, // ไม่ใช่ลูกค้าคนนี้
-        },
-      });
-
-      if (duplicatePhone) {
-        res.status(409).json({
-          error: 'Conflict',
-          message: 'เบอร์โทรศัพท์นี้มีอยู่ในระบบแล้ว',
+    // ตรวจสอบเบอร์โทร (ถ้ามี)
+    if (phone) {
+      const phonePattern = /^0[0-9]{9}$/;
+      if (!phonePattern.test(phone.trim())) {
+        res.status(400).json({
+          error: 'Bad Request',
+          message: 'เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก เริ่มต้นด้วย 0',
         });
         return;
+      }
+
+      // ถ้ามีการเปลี่ยนเบอร์โทร ต้องตรวจสอบว่าซ้ำกับคนอื่นหรือไม่
+      if (phone.trim() !== existingCustomer.phone) {
+        const duplicatePhone = await prisma.customer.findFirst({
+          where: {
+            phone: phone.trim(),
+            id: { not: id }, // ไม่ใช่ลูกค้าคนนี้
+          },
+        });
+
+        if (duplicatePhone) {
+          res.status(409).json({
+            error: 'Conflict',
+            message: 'เบอร์โทรศัพท์นี้มีอยู่ในระบบแล้ว',
+          });
+          return;
+        }
       }
     }
 
@@ -223,11 +245,11 @@ export const updateCustomer = async (
     const customer = await prisma.customer.update({
       where: { id },
       data: {
-        ...(name && { name }),
-        ...(phone && { phone }),
-        ...(email !== undefined && { email: email || null }),
-        ...(address !== undefined && { address: address || null }),
-        ...(notes !== undefined && { notes: notes || null }),
+        ...(fullName && { fullName: fullName.trim() }),
+        ...(phone && { phone: phone.trim() }),
+        ...(email !== undefined && { email: email?.trim() || null }),
+        ...(address !== undefined && { address: address?.trim() || null }),
+        ...(notes !== undefined && { notes: notes?.trim() || null }),
       },
     });
 
