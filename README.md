@@ -400,16 +400,33 @@ cd frontend
 npm run dev
 ```
 
-### ☁️ Production (Railway)
-```bash
-# ใช้ automated deployment script
-.\railway-deploy-auto.ps1
-```
+### ☁️ Production (Railway) - Auto Deploy
+
+#### วิธี Deploy อัตโนมัติ
+
+1. **เชื่อมต่อ Railway กับ GitHub**
+   - เข้าไปที่: https://railway.com/project/3b086c2b-00bf-4c87-9dba-810509613cca
+   - คลิก "Settings" → "Connect GitHub"
+
+2. **ตั้งค่า Environment Variables**
+   - Backend Service → "Variables"
+   - เพิ่ม: `DATABASE_URL`, `JWT_SECRET`, etc.
+   - ดูรายละเอียด: [RAILWAY-DEPLOY-GUIDE.md](./RAILWAY-DEPLOY-GUIDE.md)
+
+3. **ตั้งค่า Root Directory**
+   - Backend Service → "Settings" → Root Directory: `backend`
+
+4. **Push to GitHub**
+   ```bash
+   git push origin master
+   ```
+   - Railway จะ auto deploy
 
 **Railway Deployment:**
 - **Project**: https://railway.com/project/3b086c2b-00bf-4c87-9dba-810509613cca
 - **Repository**: https://github.com/ton-apicha/ibit-repair
-- **Build Time**: Backend ~3-5 นาที, Frontend ~4-7 นาที
+- **Build Time**: Backend ~3-5 นาที
+- **Guide**: [RAILWAY-DEPLOY-GUIDE.md](./RAILWAY-DEPLOY-GUIDE.md)
 
 ---
 

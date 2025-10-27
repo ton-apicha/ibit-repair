@@ -1,8 +1,14 @@
+# Railway ignores
 node_modules/
 dist/
-*.log
 .env
-.env.local
-uploads/
+.env.*
+*.log
 logs/
-backups/
+uploads/
+.DS_Store
+coverage/
+.vscode/
+.idea/
+*.swp
+*.swo
